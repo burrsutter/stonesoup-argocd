@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: burrzinga-boot
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/redhat-appstudio-appdata/boot-gTo1P-cross-invite
+    path:  components/java-springboot-hello-uvhw/overlays/development/
+    targetRevision: HEAD
+  destination:
+    namespace: burrzinga-tenant
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
