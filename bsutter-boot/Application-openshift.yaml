@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bsutter-boot
+  namespace: gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/redhat-appstudio-appdata/boot-IncVH-excuse-reject
+    path:  components/java-springboot-hello-aes3/overlays/development/
+    targetRevision: HEAD
+  destination:
+    namespace: bsutter-tenant
+    server: 'https://kubernetes.default.svc'
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
