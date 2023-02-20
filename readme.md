@@ -149,7 +149,9 @@ SERVER                          NAME        VERSION  STATUS   MESSAGE           
 https://kubernetes.default.svc  in-cluster           Unknown  Cluster has no applications and is not being monitored.
 ```
 
-Because of the .tekton directory in the Stonesoup gitops repo
+Because of the .tekton directory in the Stonesoup gitops repo create some additional CRDs
+
+????
 
 ```
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
@@ -167,4 +169,19 @@ kubectl apply -f burrzinga-boot/Application.yaml
 
 ```
 argocd app list
+```
+
+## Clean Up
+
+Remove all clusters, save some money
+```
+doctl k8s cluster delete bengaluru
+doctl k8s cluster delete amsterdam
+doctl k8s cluster delete newyork
+```
+
+Remove all load-balancers, those seem to hang around even when clusters are deleted
+```
+doctl compute load-balancer list
+doctl compute load-balancer delete 1069dd38-35e8-4f6a-a968-408ff86b78c6
 ```

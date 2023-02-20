@@ -1,18 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: burrzinga-boot
+  name: bsutter-boot
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/redhat-appstudio-appdata/boot-gTo1P-cross-invite
-    path:  components/java-springboot-hello-uvhw/overlays/development/
+    repoURL: https://github.com/redhat-appstudio-appdata/boot-IncVH-excuse-reject
+    path:  components/java-springboot-hello-aes3/overlays/development/
     targetRevision: HEAD
   destination:
-    namespace: burrzinga-tenant
+    namespace: bsutter-tenant
     server: 'https://kubernetes.default.svc'
   syncPolicy:
     automated:
