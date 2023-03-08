@@ -7,6 +7,9 @@ Install Gitops and Pipelines Operators
 oc adm policy add-cluster-role-to-user cluster-admin -z openshift-gitops-argocd-application-controller -n openshift-gitops
 ```
 
+How to find the ArgoCD UI
+
+
 ```
 oc new-project bsutter-tenant
  
