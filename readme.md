@@ -1,11 +1,10 @@
-# ArgoCD Pull from Stonesoup
+# ArgoCD Pull from Stonesoup into ROSA
 
-Stonesoup Gitops Repos
 
-https://github.com/redhat-appstudio-appdata
+Install Gitops and Pipelines Operators
 
 ```
-doctl auth init
+oc adm policy add-cluster-role-to-user cluster-admin -z openshift-gitops-argocd-application-controller -n openshift-gitops
 ```
 
 This will require a token
@@ -193,12 +192,11 @@ kubectl apply -f burrzinga-boot/Application.yaml
 
 
 ```
-argocd app list
+oc new-project bsutter-tenant
+ 
+oc apply -n openshift-gitops -f https://raw.githubusercontent.com/burrsutter/stonesoup-argocd/main/bsutter-boot/Application-openshift.yaml
 ```
 
-## Clean Up
-
-Remove all clusters, save some money
 ```
 doctl k8s cluster delete toronto
 doctl k8s cluster delete bengaluru
@@ -206,8 +204,5 @@ doctl k8s cluster delete amsterdam
 doctl k8s cluster delete newyork
 ```
 
-Remove all load-balancers, those seem to hang around even when clusters are deleted
-```
-doctl compute load-balancer list
-doctl compute load-balancer delete 1069dd38-35e8-4f6a-a968-408ff86b78c6
-```
+
+
