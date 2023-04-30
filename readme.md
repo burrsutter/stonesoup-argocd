@@ -58,7 +58,7 @@ export KUBECONFIG=~/xKS/doks-argocd/.kube/config-newyork
 Create the clusters, I do this in 3 different terminal sessions, to keep the environments nicely separated
 
 ```
-doctl kubernetes cluster create amsterdam --version 1.23.14-do.0 --region ams3 --node-pool="name=worker-pool;count=3"
+doctl kubernetes cluster create amsterdam --version 1.24.12-do.0 --region ams3 --node-pool="name=worker-pool;count=3"
 ```
 
 ```
@@ -67,6 +67,12 @@ doctl kubernetes cluster create bengaluru --version 1.23.14-do.0 --region blr1 -
 
 ```
 doctl kubernetes cluster create newyork --version 1.23.14-do.0 --region nyc1 --node-pool="name=worker-pool;count=3"
+```
+
+Hub
+
+```
+doctl kubernetes cluster create toronto --version 1.24.12-do.0 --region tor1 --node-pool="name=worker-pool;count=3"
 ```
 
 ```
@@ -95,6 +101,25 @@ doctl k8s cluster kubeconfig show newyork >> $KUBECONFIG
 ```
 doctl k8s cluster kubeconfig show toronto >> $KUBECONFIG
 ```
+
+Discover API_URL
+
+```
+TOR_API_URL=$(doctl kubernetes cluster get toronto -o json | jq -r '.[].endpoint')
+echo $TOR_API_URL
+```
+
+```
+API_URL=$TOR_API_URL .create-secrets.sh
+```
+
+```
+kubectl create namespace burrzinga-tenant
+```
+
+https://www.screencast.com/t/LmlUBHIiDG
+
+
 
 Deploy ArgoCD. 
 
@@ -175,6 +200,7 @@ argocd app list
 
 Remove all clusters, save some money
 ```
+doctl k8s cluster delete toronto
 doctl k8s cluster delete bengaluru
 doctl k8s cluster delete amsterdam
 doctl k8s cluster delete newyork
