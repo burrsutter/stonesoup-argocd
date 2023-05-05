@@ -1,11 +1,4 @@
-# ArgoCD Pull from Stonesoup into ROSA
-
-
-Install Gitops and Pipelines Operators
-
-```
-oc adm policy add-cluster-role-to-user cluster-admin -z openshift-gitops-argocd-application-controller -n openshift-gitops
-```
+# Setup DOKS clusters
 
 This will require a token
 
@@ -24,17 +17,14 @@ Do you have any load-balancers up?  These are a result from using Service type L
 doctl compute load-balancer list
 ```
 
-Download argocd binary
-
-https://github.com/argoproj/argo-cd/releases
-
-Important env vars to configure, making sure kubectl and argocd are in the PATH
+```
+doctl kubernetes options sizes
+```
 
 ```
 export KUBE_EDITOR="code -w"
 export PATH=~/devnation/bin:$PATH
 ```
-
 
 Create a place for the KUBECONFIGs.  I like keeping my clusters separated via unique KUBECONFIGs
 
@@ -54,34 +44,28 @@ export KUBECONFIG=~/xKS/doks-argocd/.kube/config-bengaluru
 export KUBECONFIG=~/xKS/doks-argocd/.kube/config-newyork
 ```
 
-Create the clusters, I do this in 3 different terminal sessions, to keep the environments nicely separated
-
 ```
-doctl kubernetes cluster create amsterdam --version 1.24.12-do.0 --region ams3 --node-pool="name=worker-pool;count=3"
+export KUBECONFIG=~/xKS/doks-argocd/.kube/config-toronto
 ```
 
-```
-doctl kubernetes cluster create bengaluru --version 1.23.14-do.0 --region blr1 --node-pool="name=worker-pool;count=3"
-```
+Create the clusters, I do this in 4 different terminal sessions, to keep the environments nicely separated
 
 ```
-doctl kubernetes cluster create newyork --version 1.23.14-do.0 --region nyc1 --node-pool="name=worker-pool;count=3"
-```
-
-Hub
-
-```
-doctl kubernetes cluster create toronto --version 1.24.12-do.0 --region tor1 --node-pool="name=worker-pool;count=3"
+doctl kubernetes cluster create amsterdam --version 1.24.12-do.0 --region ams3 --node-pool="name=worker-pool;count=2;size=s-4vcpu-8gb"
 ```
 
 ```
-doctl kubernetes cluster list
+doctl kubernetes cluster create bengaluru --version 1.24.12-do.0 --region blr1 --node-pool="name=worker-pool;count=2;size=s-4vcpu-8gb"
 ```
 
 ```
-ID                                      Name         Region    Version         Auto Upgrade    Status     Node Pools
-e2b47ebf-093a-4ac4-be69-1fdaa3b3b4c0    bengaluru    blr1      1.23.14-do.0    false           running    worker-pool
+doctl kubernetes cluster create newyork --version 1.24.12-do.0 --region nyc1 --node-pool="name=worker-pool;count=2;size=s-4vcpu-8gb"
 ```
+
+```
+doctl kubernetes cluster create toronto --version 1.24.12-do.0 --region tor1 --node-pool="name=worker-pool;count=2;size=s-4vcpu-8gb"
+```
+
 
 If needed, overlay the per cluster $KUBECONFIG files
 
@@ -101,6 +85,90 @@ doctl k8s cluster kubeconfig show newyork >> $KUBECONFIG
 doctl k8s cluster kubeconfig show toronto >> $KUBECONFIG
 ```
 
+```
+doctl kubernetes cluster list
+```
+
+
+```
+ID                                      Name         Region    Version         Auto Upgrade    Status     Node Pools
+b5a0165b-5841-4466-b5d1-dd38a01be681    toronto      tor1      1.24.12-do.0    false           running    worker-pool
+5cdf6045-3d79-4390-a088-19aa1e92ccaf    newyork      nyc1      1.24.12-do.0    false           running    worker-pool
+634cd022-5d0b-40d2-ba70-8189574e5575    bengaluru    blr1      1.24.12-do.0    false           running    worker-pool
+75ecb161-232c-489a-9799-1092d840bbab    amsterdam    ams3      1.24.12-do.0    false           running    worker-pool
+```
+
+# ACS Sensor
+
+### Add these clusters to ACS
+
+Related to this video
+
+https://youtu.be/za_bAAtZanU
+
+Figure out your registry.redhat.io user and password 
+
+```
+docker login registry.redhat.io
+```
+
+```
+helm repo add rhacs https://mirror.openshift.com/pub/rhacs/charts/
+```
+
+### Amsterdam
+```
+helm install -n stackrox --create-namespace stackrox-secured-cluster-services rhacs/secured-cluster-services -f ./amsterdam/values-amsterdam.yaml -f ./amsterdam/amsterdam-cluster-init-bundle.yaml --set imagePullSecrets.username="{registry.redhat.io-user}" --set imagePullSecrets.password="{registry.redhat.io-password}"
+```
+
+### Bengaluru
+helm install -n stackrox --create-namespace stackrox-secured-cluster-services rhacs/secured-cluster-services -f ./bengaluru/values-bengaluru.yaml -f ./bengaluru/bengaluru-cluster-init-bundle.yaml --set imagePullSecrets.username="{registry.redhat.io-user}" --set imagePullSecrets.password="{registry.redhat.io-password}"
+
+### New York
+helm install -n stackrox --create-namespace stackrox-secured-cluster-services rhacs/secured-cluster-services -f ./newyork/values-newyork.yaml -f ./newyork/newyork-cluster-init-bundle.yaml --set imagePullSecrets.username="{registry.redhat.io-user}" --set imagePullSecrets.password="{registry.redhat.io-password}"
+
+### Toronto
+helm install -n stackrox --create-namespace stackrox-secured-cluster-services rhacs/secured-cluster-services -f ./toronto/values-toronto.yaml -f ./toronto/toronto-cluster-init-bundle.yaml --set imagePullSecrets.username="{registry.redhat.io-user}" --set imagePullSecrets.password="{registry.redhat.io-password}"
+
+
+# Add some ugly apps for ACS to find
+
+```
+kubectl create namespace shelly
+kubectl create deployment shocked --image=vulnerables/cve-2014-6271 -n shelly
+```
+
+```
+kubectl create namespace tango
+kubectl create deployment samba --image=vulnerables/cve-2017-7494 -n tango
+```
+
+```
+kubectl create namespace finance
+kubectl apply -f https://raw.githubusercontent.com/burrsutter/acm-argocd-acs/main/acs-hello/minerd-deployment.yaml
+```
+
+```
+kubectl create namespace devops
+kubectl apply -f https://raw.githubusercontent.com/burrsutter/acm-argocd-acs/main/acs-hello/log4shellapp.yaml
+```
+
+
+# ArgoCD Push from Stonesoup 
+
+
+Download argocd binary
+
+https://github.com/argoproj/argo-cd/releases
+
+Important env vars to configure, making sure kubectl and argocd are in the PATH
+
+```
+export KUBE_EDITOR="code -w"
+export PATH=~/devnation/bin:$PATH
+```
+
+
 Discover API_URL
 
 ```
@@ -119,8 +187,7 @@ kubectl create namespace burrzinga-tenant
 https://www.screencast.com/t/LmlUBHIiDG
 
 
-
-Deploy ArgoCD. 
+# ArgoCD Pull
 
 ```
 kubectl create namespace argocd
