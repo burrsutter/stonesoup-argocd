@@ -353,13 +353,19 @@ default     basic-ingress   <none>   *       34.120.143.188   80      113s
 
 https://cloud.google.com/dns/docs/set-up-dns-records-domain-name#create_a_new_record
 
+Create Cloud DNS Zone
+
 ```
 gcloud dns --project=ocp42project managed-zones create kinetic-gpc-com --description="" --dns-name="kinetic-gpc.com." --visibility="public" --dnssec-state="off"
 ```
 
+Create A record
+
 ```
 gcloud dns --project=ocp42project record-sets create kinetic-gcp.com. --zone="kinetic-gcp-com" --type="A" --ttl="300" --rrdatas="34.120.137.82"
 ```
+
+Create CNAME
 
 ```
 gcloud dns --project=ocp42project record-sets create www.kinetic-gcp.com. --zone="kinetic-gcp-com" --type="CNAME" --ttl="300" --rrdatas="web.kinetic-gcp.com."
@@ -403,7 +409,7 @@ metadata:
     kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
 spec:
   rules:
-  - host: kinetic-gcp.com
+  - host: *.kinetic-gcp.com
     http:
       paths:
       - path: /*
@@ -437,13 +443,32 @@ Version: 2.0.0
 Hostname: web2-857c56b696-btxsq
 ```
 
+## AKS with Ingress
+
+https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DomainRegistration%2Fdomains
+
+```
+az group list -o table
+Name                                        Location    Status
+------------------------------------------  ----------  ---------
+NetworkWatcherRG                            uksouth     Succeeded
+myAKSTokyoResourceGroup                     japaneast   Succeeded
+MC_myAKSTokyoResourceGroup_tokyo_japaneast  japaneast   Succeeded
+rg-kinetic-azr.com                          westus      Succeeded
+myresourcegroup                             westus      Succeeded
+```
+
+```
+az network dns record-set a list -g rg-kinetic-azr.com -z kinetic-azr.com
+[]
+```
+
+
+
 ## EKS with Ingress
 
 https://us-east-1.console.aws.amazon.com/route53/home#DomainListing:
 
-## AKS with Ingress
-
-https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.DomainRegistration%2Fdomains
 
 
 ## Stonesoup Push via ArgoCD
